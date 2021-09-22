@@ -42,4 +42,8 @@ func ApiRegisterValidator() {
 	// 根据类型获取最新电影表单参数验证器
 	key = consts.ValidatorPrefix + "MovieGetLists"
 	containers.Set(key, movie.MovieGetLists{})
+
+	// 根据类型获取最新电影表单参数验证器
+	key = consts.ValidatorPrefix + "MovieGetMovie"
+	containers.Set(key, movie.GetMovie{})
 }

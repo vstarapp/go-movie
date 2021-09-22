@@ -23,6 +23,15 @@ func (c *Movie) GetMovies(context *gin.Context) {
 	})
 }
 
+func (m *Movie) GetMovie(context *gin.Context) {
+	id := int64(context.GetFloat64(consts.ValidatorPrefix + "id"))
+	movieModelFact := model.CreateMovieFactory("")
+	data := movieModelFact.GetMovie(id)
+	response.Success(context, "ok", gin.H{
+		"data": data,
+	})
+}
+
 // 获取首页评分Top10
 func (m *Movie) GetTop10(context *gin.Context) {
 	var maps = make(map[string]interface{})

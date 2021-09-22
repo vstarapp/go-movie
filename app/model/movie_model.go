@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -56,10 +57,71 @@ func (m *MovieModel) GetMovies(PageNum int, PageSize int, maps interface{}) (mov
 	return
 }
 
-func (m *MovieModel) GetMovie(id int) (movie *MovieModel) {
-	m.Where("mov_id=?", id).First(&movie)
+func (m *MovieModel) GetMovie(id int64) interface{} {
+	type Result struct {
+		Id            int64       `json:"id"`
+		Title         string      `json:"title"`
+		Alias         string      `json:"alias"`
+		Cover         string      `json:"cover"`
+		Rate          float64     `json:"rate"`
+		Directors     interface{} `json:"directors"`
+		ScreenWriters interface{} `json:"screen_writers"`
+		Actors        interface{} `json:"actors"`
+		Category      interface{} `json:"category"`
+		Area          string      `json:"area"`
+		Language      string      `、json:"language"`
+		Year          int64       `json:"year"`
+		Duration      string      `json:"duration"`
+		CreatedAt     string      `json:"created_at"`
+	}
+	var result *Result
+	rows, err := m.Model(&MovieModel{}).Select([]string{"mov_id", "mov_title", "mov_alias", "mov_cover", "mov_rate", "mov_directors", "mov_screen_writers", "mov_actors", "mov_category", "mov_area", "mov_language", "mov_year", "mov_duration", "mov_created_at"}).Where("mov_id=?", id).Rows()
+	// 凡是查询类记得释放记录集
+	defer rows.Close()
+	if err == nil && rows != nil {
+		for rows.Next() {
+			var id, year, created_at int64
+			var rate float64
+			var title, alias, cover, directors, screenWriters, actors, category, area, language, duration string
+			err := rows.Scan(&id, &title, &alias, &cover, &rate, &directors, &screenWriters, &actors, &category, &area, &language, &year, &duration, &created_at)
+			if err == nil {
+				var directorsJson interface{}
+				if err3 := json.Unmarshal([]byte(directors), &directorsJson); err3 != nil {
+					variable.ZapLog.Error("解析电影导演失败:", zap.Error(err3))
+				}
+				var screenWritersJson interface{}
+				if err3 := json.Unmarshal([]byte(screenWriters), &screenWritersJson); err3 != nil {
+					variable.ZapLog.Error("解析电影编剧失败:", zap.Error(err3))
+				}
+				var actorsJson interface{}
+				if err2 := json.Unmarshal([]byte(actors), &actorsJson); err2 != nil {
+					variable.ZapLog.Error("解析电影演员失败:", zap.Error(err2))
+				}
+				var categoryJson interface{}
+				if err3 := json.Unmarshal([]byte(category), &categoryJson); err3 != nil {
+					variable.ZapLog.Error("解析电影类型失败:", zap.Error(err3))
+				}
 
-	return
+				result = &Result{
+					Id:            id,
+					Title:         title,
+					Alias:         alias,
+					Cover:         cover,
+					Rate:          rate,
+					Directors:     directorsJson,
+					ScreenWriters: screenWritersJson,
+					Actors:        actorsJson,
+					Category:      categoryJson,
+					Area:          area,
+					Language:      language,
+					Year:          year,
+					Duration:      duration,
+					CreatedAt:     time.Unix(created_at, 0).Format("2006-01-02 15:04:05"),
+				}
+			}
+		}
+	}
+	return result
 }
 
 // 获取评分Top10

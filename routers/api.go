@@ -68,6 +68,7 @@ func InitApiRouter() *gin.Engine {
 			movie.GET("lately_all", (&api.Movie{}).GetLatelyOfAll)
 			movie.GET("lately_by_type", validatorFactory.Create(consts.ValidatorPrefix+"GetLatelyByType"))
 			movie.GET("movie_lists", validatorFactory.Create(consts.ValidatorPrefix+"MovieGetLists"))
+			movie.GET("movie", validatorFactory.Create(consts.ValidatorPrefix+"MovieGetMovie"))
 		}
 	}
 	return router

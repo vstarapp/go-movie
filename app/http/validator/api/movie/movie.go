@@ -130,3 +130,26 @@ func (m MovieGetLists) CheckParams(context *gin.Context) {
 		(&api.Movie{}).GetLists(extraAddBindDataContext)
 	}
 }
+
+type GetMovie struct {
+	Id int64 `form:"id" json:"id" binding:"required,min=1,max=40"`
+}
+
+func (m GetMovie) CheckParams(context *gin.Context) {
+	//1.先按照验证器提供的基本语法，基本可以校验90%以上的不合格参数
+	if err := context.ShouldBind(&m); err != nil {
+		response.ErrorParam(context, gin.H{
+			"tips": "参数校验失败，参数不符合规定,请按照规则自己检查",
+			"err":  validator_trans.Translate(err),
+		})
+		return
+	}
+	//  该函数主要是将绑定的数据以 键=>值 形式直接传递给下一步（控制器）
+	extraAddBindDataContext := data_transfer.DataAddContext(m, consts.ValidatorPrefix, context)
+	if extraAddBindDataContext == nil {
+		response.ErrorSystem(context, "表单验证器json化失败", "")
+	} else {
+		// 验证完成，调用控制器,并将验证器成员(字段)递给控制器，保持上下文数据一致性
+		(&api.Movie{}).GetMovie(extraAddBindDataContext)
+	}
+}
